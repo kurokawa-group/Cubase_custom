@@ -145,7 +145,7 @@ NumpadMult:: {
 
 <script>
 function copyCode(){navigator.clipboard.writeText(document.getElementById("ahk-code").innerText).then(()=>alert("スクリプトをクリップボードにコピーしました！"));}
-function downloadAhk(){const b=new Blob([document.getElementById("ahk-code").innerText],{type:"text/plain;charset=utf-8"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download="cubase16_preroll.ahk";a.click();URL.revokeObjectURL(u);}
+function downloadAhk(){const b=new Blob([document.getElementById("ahk-code").innerText],{type:"text/plain;charset=utf-8"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download="preroll.ahk";a.click();URL.revokeObjectURL(u);}
 </script>
 </body>
 </html>
