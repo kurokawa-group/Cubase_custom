@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Cubase 16 自動ホイールナッジ 設定ガイド（単体版）</title>
+<style>
+:root{--bg:#181a1f;--surface:#22262e;--border:#333945;--text:#f0f2f5;--muted:#b0b8c5;--accent:#4dabf7;--hover:#339af0;--code:#121417}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Noto Sans JP",sans-serif;background:var(--bg);color:var(--text);font-size:19px;line-height:1.7;margin:0;padding:30px 20px}
+.container{max-width:960px;margin:0 auto}
+h1{font-size:1.75rem;border-bottom:3px solid var(--accent);padding-bottom:12px;margin:0 0 24px}
+h2{font-size:1.35rem;color:var(--accent);margin:0 0 14px}
+p{margin:0 0 16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px 28px;margin-bottom:28px;box-shadow:0 4px 16px rgba(0,0,0,.3)}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:1rem}
+th,td{border:1px solid var(--border);padding:12px 14px;text-align:left}
+th{background:var(--code);color:var(--accent)}
+ul{margin:8px 0;padding-left:24px}
+li{margin-bottom:10px}
+code{font-family:Consolas,Monaco,monospace;background:var(--code);padding:3px 7px;border-radius:5px;font-size:.92em;color:#ffd43b}
+pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padding:18px;overflow-x:auto;font-family:Consolas,Monaco,monospace;font-size:15px;line-height:1.5;color:#e6edf3;margin:0}
+.btn-group{display:flex;gap:14px;margin-top:16px}
+button{background:var(--accent);color:#111;font-weight:bold;border:none;border-radius:6px;padding:12px 22px;cursor:pointer;font-size:1rem}
+button:hover{background:var(--hover)}
+button.secondary{background:var(--border);color:var(--text)}
+button.secondary:hover{background:#444c5c}
+.note{font-size:.95rem;color:var(--muted);border-left:4px solid var(--accent);padding-left:14px;margin-top:16px}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Cubase 16 自動ホイールナッジ 設定ガイド（単体版）</h1>
+<p>Cubase 16 がアクティブなときだけ有効になり、<strong>MIDIノート選択中だけの自動ホイールナッジ（1msなど任意の単位で調整可能）</strong>と、<strong>選択解除時の通常スクロール即復帰</strong>を実現します。</p>
+
+<div class="card">
+<h2>1. 操作割り当て一覧</h2>
+<table>
+<thead><tr><th>操作方法</th><th>Cubase上の動作</th><th>内部処理（送信キー）</th></tr></thead>
+<tbody>
+<tr><td>ノート選択中に <code>ホイール上</code></td><td>右へナッジ（設定グリッド単位で後ろへ移動）</td><td><code>]</code>（片道スキャンON時）</td></tr>
+<tr><td>ノート選択中に <code>ホイール下</code></td><td>左へナッジ（設定グリッド単位で前へ移動）</td><td><code>[</code>（片道スキャンON時）</td></tr>
+<tr><td>空白クリック / <code>Esc</code></td><td>選択解除と同時に通常スクロールへ即復帰</td><td>スキャンせず強制OFF</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="card">
+<h2>2. Cubase 16 本体側の事前設定</h2>
+<ul>
+<li><strong>情報ラインの表示</strong>：<br>キーエディタ上部のレイアウト設定で「情報ライン」を表示させておきます。</li>
+<li><strong>ナッジ単位（グリッド）の調整</strong>：<br>エディタ上部のスナップ／グリッド設定で、<strong><code>1 ms</code> や <code>1/16</code> など動かしたい任意の単位</strong>に調整可能です（スナップOFF時はズーム倍率に応じた微調整になります）。</li>
+<li><strong>キーボードショートカット設定</strong>（編集 ＞ キーボードショートカット ＞ ナッジ）：
+<ul>
+<li>ナッジ ＞ 左へ移動：単一キーの <code>[</code> を割り当て</li>
+<li>ナッジ ＞ 右へ移動：単一キーの <code>]</code> を割り当て</li>
+</ul>
+</li>
+</ul>
+</div>
+
+<div class="card">
+<h2>3. AutoHotkey v2 スクリプト（ナッジ単体版・確定座標反映済み）</h2>
+<p>下のボタンから <code>.ahk</code> ファイルをダウンロードし、ダブルクリックして常駐させてください。</p>
+<pre id="ahk-code">#Requires AutoHotkey v2.0
+
+if not A_IsAdmin {
+    Run '*RunAs "' A_ScriptFullPath '"'
+    ExitApp
+}
+
+SetTitleMatchMode "RegEx"
+#HotIf WinActive("ahk_exe i).*Cubase.*\.exe")
+
+SetKeyDelay 10, 10
+global IsNoteSelectedFlag := false
+
+; 【座標再取得用ヘルパー】レイアウト変更時に情報ライン白文字上で \ キーを押す
+vkDC::
+vkE2:: {
+    CoordMode "Mouse", "Screen"
+    CoordMode "Pixel", "Screen"
+    MouseGetPos(&amp;mx, &amp;my)
+    col := PixelGetColor(mx, my)
+    A_Clipboard := "CheckX := " mx "`nTextColor := " col
+    ToolTip "コピー完了 X:" mx " 色:" col
+    SetTimer () =&gt; ToolTip(), -4000
+}
+
+; 解除時はスキャンしない「片道スキャン」方式の自動ナッジ
+~LButton Up:: {
+    global IsNoteSelectedFlag
+    if (IsNoteSelectedFlag) {
+        IsNoteSelectedFlag := false
+        return
+    }
+    Sleep 60
+    CoordMode "Pixel", "Screen"
+    CheckX := 112
+    TextColor := 0xB1B2B3
+    if PixelSearch(&amp;FoundX, &amp;FoundY, CheckX, 150, CheckX, 950, TextColor, 15) {
+        IsNoteSelectedFlag := true
+    }
+}
+
+~Esc:: {
+    global IsNoteSelectedFlag
+    IsNoteSelectedFlag := false
+}
+
+#HotIf WinActive("ahk_exe i).*Cubase.*\.exe") &amp;&amp; IsNoteSelectedFlag
+WheelUp::SendEvent "{vkDD}"   ; 右へナッジ（]）
+WheelDown::SendEvent "{vkDB}" ; 左へナッジ（[）
+#HotIf</pre>
+<div class="btn-group">
+<button onclick="copyCode()">コードをコピー</button>
+<button class="secondary" onclick="downloadAhk()">.ahk ファイルをダウンロード</button>
+</div>
+</div>
+
+<div class="card">
+<h2>4. Windows起動時の自動常駐（スタートアップ登録）と運用</h2>
+<ul>
+<li><strong>スタートアップ登録手順</strong>：保存した <code>.ahk</code> ファイルを右クリック ＞「ショートカットの作成」を実行。<code>Win + R</code> を押して <code>shell:startup</code> と入力して開き、作成したショートカットをそのフォルダへ移動します。</li>
+<li><strong>座標の再取得方法</strong>：画面レイアウトやモニター解像度を変更した場合は、ノート選択中に情報ラインの白文字へマウスを乗せて <code>\</code> キーを押すと、新しい <code>CheckX</code> と <code>TextColor</code> をクリップボードへ取得できます。</li>
+</ul>
+</div>
+</div>
+
+<script>
+function copyCode(){navigator.clipboard.writeText(document.getElementById("ahk-code").innerText).then(()=>alert("スクリプトをクリップボードにコピーしました！"));}
+function downloadAhk(){const b=new Blob([document.getElementById("ahk-code").innerText],{type:"text/plain;charset=utf-8"}),u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download="cubase16_nudge.ahk";a.click();URL.revokeObjectURL(u);}
+</script>
+</body>
+</html>
