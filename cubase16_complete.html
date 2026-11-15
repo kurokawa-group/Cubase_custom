@@ -2,16 +2,22 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cubase 16 自動プリロール録音＆自動ナッジ設定ガイド</title>
 <style>
 :root{--bg:#181a1f;--surface:#22262e;--border:#333945;--text:#f0f2f5;--muted:#b0b8c5;--accent:#4dabf7;--hover:#339af0;--code:#121417}
+*{box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Noto Sans JP",sans-serif;background:var(--bg);color:var(--text);font-size:19px;line-height:1.7;margin:0;padding:30px 20px}
 .container{max-width:960px;margin:0 auto}
-h1{font-size:1.75rem;border-bottom:3px solid var(--accent);padding-bottom:12px;margin:0 0 24px}
-h2{font-size:1.35rem;color:var(--accent);margin:0 0 14px}
+.back-nav{margin-bottom:16px}
+.back-nav a{display:inline-block;color:var(--accent);text-decoration:none;font-size:.95rem;font-weight:bold;padding:8px 14px;border:1px solid var(--border);border-radius:6px;background:var(--surface);transition:all .15s}
+.back-nav a:hover{border-color:var(--accent);background:rgba(77,171,247,.12)}
+h1{font-size:1.75rem;border-bottom:3px solid var(--accent);padding-bottom:12px;margin:0 0 24px;line-height:1.35}
+h2{font-size:1.35rem;color:var(--accent);margin:0 0 14px;line-height:1.4}
 p{margin:0 0 16px}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px 28px;margin-bottom:28px;box-shadow:0 4px 16px rgba(0,0,0,.3)}
-table{width:100%;border-collapse:collapse;margin:12px 0;font-size:1rem}
+.table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;margin:12px 0}
+table{width:100%;border-collapse:collapse;font-size:1rem;min-width:560px}
 th,td{border:1px solid var(--border);padding:12px 14px;text-align:left}
 th{background:var(--code);color:var(--accent)}
 ul{margin:8px 0;padding-left:24px}
@@ -24,15 +30,31 @@ button:hover{background:var(--hover)}
 button.secondary{background:var(--border);color:var(--text)}
 button.secondary:hover{background:#444c5c}
 .note{font-size:.95rem;color:var(--muted);border-left:4px solid var(--accent);padding-left:14px;margin-top:16px}
+
+@media (max-width: 640px) {
+  body{font-size:16px;padding:20px 14px}
+  h1{font-size:1.4rem;margin-bottom:18px}
+  h2{font-size:1.18rem}
+  .card{padding:18px 16px;margin-bottom:20px}
+  table{font-size:.9rem}
+  th,td{padding:10px 10px}
+  ul{padding-left:20px}
+  pre{font-size:13px;padding:14px}
+  .btn-group{flex-direction:column;gap:10px}
+  button{width:100%;padding:13px 16px;font-size:1rem}
+  .note{font-size:.9rem}
+}
 </style>
 </head>
 <body>
 <div class="container">
+<div class="back-nav"><a href="index.html">← ガイド一覧（トップ）へ戻る</a></div>
 <h1>Cubase 16 自動プリロール録音＆自動ナッジ設定ガイド</h1>
 <p>Cubase 16 がアクティブなときだけ有効になり、<strong>2小節前からのプリロール自動録音</strong>（通常再生時は完全無音）と、<strong>MIDIノート選択中だけの自動ホイールナッジ（1msなど任意の単位で調整可能）</strong>を実現します。</p>
 
 <div class="card">
 <h2>1. 操作割り当て一覧</h2>
+<div class="table-wrap">
 <table>
 <thead><tr><th>操作方法</th><th>Cubase上の動作</th><th>内部処理（送信キー）</th></tr></thead>
 <tbody>
@@ -43,6 +65,7 @@ button.secondary:hover{background:#444c5c}
 <tr><td>空白クリック / <code>Esc</code></td><td>選択解除と同時に通常スクロールへ即復帰</td><td>スキャンせず強制OFF</td></tr>
 </tbody>
 </table>
+</div>
 </div>
 
 <div class="card">
@@ -157,6 +180,8 @@ WheelDown::SendEvent "{vkDB}"
 </ul>
 <div class="note">※画面レイアウトや解像度を変更した場合は、ノート選択中に情報ラインの白文字へマウスを乗せて <code>\</code> キーを押すと、新しい <code>CheckX</code> と <code>TextColor</code> を取得できます。</div>
 </div>
+
+<div class="back-nav"><a href="index.html">← ガイド一覧（トップ）へ戻る</a></div>
 </div>
 
 <script>
