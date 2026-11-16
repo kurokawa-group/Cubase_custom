@@ -87,11 +87,6 @@ button.secondary:hover{background:#444c5c}
 <p>下のボタンから <code>.ahk</code> ファイルをダウンロードし、ダブルクリックして常駐させてください。</p>
 <pre id="ahk-code">#Requires AutoHotkey v2.0
 
-if not A_IsAdmin {
-    Run '*RunAs "' A_ScriptFullPath '"'
-    ExitApp
-}
-
 SetTitleMatchMode "RegEx"
 #HotIf WinActive("ahk_exe i).*Cubase.*\.exe")
 
@@ -135,7 +130,7 @@ NumpadMult:: {
 <div class="card">
 <h2>4. Windows起動時の自動常駐（スタートアップ登録）と運用</h2>
 <ul>
-<li><strong>スタートアップ登録手順</strong>：保存した <code>.ahk</code> ファイルを右クリック ＞「ショートカットの作成」を実行。<code>Win + R</code> を押して <code>shell:startup</code> と入力して開き、作成したショートカットをそのフォルダへ移動します。</li>
+<li><strong>スタートアップ登録手順（UAC警告なし）</strong>：保存した <code>.ahk</code> ファイルを右クリック ＞「ショートカットの作成」を実行。<code>Win + R</code> を押して <code>shell:startup</code> と入力して開き、作成したショートカットをそのフォルダへ移動します（管理者昇格処理を省いているため、PC起動時に警告ダイアログなしで自動常駐します）。</li>
 <li><strong>状態ズレのリセット</strong>：起動時は「プリロール」と「メトロノーム」が消灯していることを確認してください。手動操作等で状態が反転した場合は、タスクトレイの緑の「H」アイコンを右クリック ＞「Reload Script」で即座にリセットできます。</li>
 </ul>
 <div class="note">※「統合版（<code>custom.ahk</code>）」と併用するとキー操作が二重送信されて状態が反転するため、単体版を使用する場合は他の同系スクリプトを終了（Exit）した状態で常駐させてください（<code>nudge.ahk</code> との個別併用は可能です）。</div>

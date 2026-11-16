@@ -64,7 +64,7 @@ button.secondary:hover{background:#444c5c}
 <tr><td><code>Space</code> / テンキー <code>0</code></td><td>録音停止 ＋ プリロール＆クリック自動解除</td><td>停止後 <code>-</code> ＋ <code>c</code>（OFF）</td></tr>
 <tr><td>MIDIノート選択直後に <code>ホイール上</code></td><td>右へナッジ（設定グリッド単位で後ろへ移動）</td><td><code>]</code>（高速メモリ判定ON時）</td></tr>
 <tr><td>MIDIノート選択直後に <code>ホイール下</code></td><td>左へナッジ（設定グリッド単位で前へ移動）</td><td><code>[</code>（高速メモリ判定ON時）</td></tr>
-<tr><td>他所をクリック / <code>Esc</code></td><td>遅延ゼロ（約0.002秒）で通常のスクロールへ即復帰</td><td>クリックごとに再判定してOFF</td></tr>
+<tr><td>他所をクリック / <code>Esc</code> / 領域外へ移動</td><td>遅延ゼロ（約0.002秒）で通常のスクロールへ即復帰</td><td>上下境界＆クリック判定で自動OFF</td></tr>
 </tbody>
 </table>
 </div>
@@ -92,7 +92,7 @@ button.secondary:hover{background:#444c5c}
 <ul>
 <li><strong>色付きノート＆グレーノート自動判定</strong>：特定の色コード固定ではなく、<strong>彩度（色味）がある色</strong>および<strong>鍵盤背景（白鍵の明るいグレー・黒鍵の暗いグレー）を除外したノート特有のグレー色</strong>を自動判別するため、トラックカラーや選択状態による明度変化に左右されません。</li>
 <li><strong>メモリ一括転送（BitBlt）による約0.002秒の無遅延判定</strong>：クリックしたY座標（<code>my</code>）の前後（<strong>上下 <code>±150px</code></strong>＝2〜3鍵盤分以上の余裕）をWindows APIでメモリ上に一括コピーして1px単位で高速スキャンします。ノートの際をクリックした際の取りこぼしを防ぎつつ、選択解除（空白クリック）時も遅延ゼロで即座に通常スクロールへ戻ります。</li>
-<li><strong>タイムライン移動時の自動復帰</strong>：ノートを選択したままでも、マウスカーソルがクリック位置から上下 <code>150px</code> 以上離れる（上のタイムラインへ移動する）と自動的に通常のホイールスクロールへ切り替わります。</li>
+<li><strong>ピアノロール上下境界の自動検出（領域外への移動で即復帰）</strong>：ノートを選択した瞬間に、ピアノロール鍵盤の<strong>上端（<code>EditorTopY</code>）と下端（<code>EditorBottomY</code>）のY座標</strong>を自動取得します。エディタウィンドウ内であれば端から端までどこでもナッジが効き、上のタイムライン・下側の別ペイン・別ウィンドウへカーソルを移動させた瞬間に、クリックしなくても自動で通常のスクロールへ切り替わります。</li>
 </ul>
 
 <h3>【初回セットアップ】ご自身の環境での「鍵盤判定エリア（X座標）」取得と貼り付け方法</h3>
@@ -112,14 +112,9 @@ global KeyAreaMaxX := 58        ; 鍵盤判定エリアの右端 X座標（初�
 </div>
 
 <div class="card">
-<h2>4. AutoHotkey v2 統合スクリプト（BitBlt無遅延スキャン・完全版）</h2>
+<h2>4. AutoHotkey v2 統合スクリプト（上下境界自動検出・無遅延完全版）</h2>
 <p>下のボタンから <code>.ahk</code> ファイルをダウンロードし、ダブルクリックして常駐させてください。</p>
 <pre id="ahk-code">#Requires AutoHotkey v2.0
-
-if not A_IsAdmin {
-    Run '*RunAs "' A_ScriptFullPath '"'
-    ExitApp
-}
 
 SetTitleMatchMode "RegEx"
 #HotIf WinActive("ahk_exe i).*Cubase.*\.exe")
@@ -135,7 +130,9 @@ global KeyAreaMaxX := 58        ; 鍵盤判定エリアの右端 X座標（初�
 
 global IsPreRollOn := false
 global IsNoteSelectedFlag := false
-global SelectedNoteY := 0
+global SelectedWinID := 0
+global EditorTopY := 0
+global EditorBottomY := 0
 
 ; 【座標・色取得ヘルパー】鍵盤の光る部分の上で \ キー（ひらがなの「ろ」／「ー」キー）を押す
 vkDC::
@@ -181,10 +178,10 @@ NumpadMult:: {
 }
 
 ; ==============================================================================
-; 2. クリック位置基準の自動ナッジ（メモリ一括コピーによる 0.002秒 超高速判定）
+; 2. クリック位置基準の自動ナッジ（上下境界自動検出 ＋ 0.002秒高速スキャン）
 ; ==============================================================================
 ~LButton Up:: {
-    global IsNoteSelectedFlag, IsPreRollOn, SelectedNoteY
+    global IsNoteSelectedFlag, IsPreRollOn, SelectedWinID, EditorTopY, EditorBottomY
     global KeyAreaMinX, KeyAreaMaxX
     
     if (IsPreRollOn) {
@@ -194,26 +191,33 @@ NumpadMult:: {
 
     Sleep 35 ; CubaseのUI描画完了待ち
     CoordMode "Mouse", "Screen"
-    MouseGetPos(&amp;mx, &amp;my)
+    MouseGetPos(&amp;mx, &amp;my, &amp;winID)
     
     SearchTop := Max(0, my - 150)
     SearchHeight := 300
     SearchWidth := Max(1, KeyAreaMaxX - KeyAreaMinX + 1)
     
-    ; 1. 鍵盤側（KeyAreaMinX〜KeyAreaMaxX, my±150px）を一括メモリ取得して1px単位で超高速判定
-    FoundNoteColor := FastScanAreaForNote(KeyAreaMinX, SearchTop, SearchWidth, SearchHeight)
+    ; 1. 鍵盤エリア（白鍵が存在し、かつハイライト色があるか）を一括メモリ判定
+    scanRes := FastScanKeyboardArea(KeyAreaMinX, SearchTop, SearchWidth, SearchHeight)
+    FoundNoteColor := scanRes.foundNote
+    HasPianoWhiteKey := scanRes.hasWhiteKey
     
-    ; 2. 鍵盤側で弾かれた場合でも、クリックした位置(mx, my)自体にノートがあれば救済
-    if (!FoundNoteColor &amp;&amp; mx &gt; KeyAreaMaxX + 20) {
-        FoundNoteColor := FastScanAreaForNote(mx, Max(0, my - 2), 1, 5)
+    ; 2. ピアノロールが存在する高さであり、かつクリック位置(mx, my)自体にノートがあれば救済
+    if (!FoundNoteColor &amp;&amp; HasPianoWhiteKey &amp;&amp; mx &gt; KeyAreaMaxX + 20) {
+        FoundNoteColor := FastScanSinglePoint(mx, Max(0, my - 2), 1, 5)
     }
     
-    if (FoundNoteColor) {
+    if (FoundNoteColor &amp;&amp; HasPianoWhiteKey) {
         IsNoteSelectedFlag := true
-        SelectedNoteY := my
+        SelectedWinID := winID
+        bounds := FindPianoRollBoundsY(KeyAreaMinX + 2, my)
+        EditorTopY := bounds.topY
+        EditorBottomY := bounds.bottomY
     } else {
         IsNoteSelectedFlag := false
-        SelectedNoteY := 0
+        SelectedWinID := 0
+        EditorTopY := 0
+        EditorBottomY := 0
     }
 }
 
@@ -222,47 +226,52 @@ NumpadMult:: {
     IsNoteSelectedFlag := false
 }
 
-#HotIf WinActive("ahk_exe i).*Cubase.*\.exe") &amp;&amp; IsNoteSelectedFlag &amp;&amp; IsMouseNearClickY()
+#HotIf WinActive("ahk_exe i).*Cubase.*\.exe") &amp;&amp; IsNoteSelectedFlag &amp;&amp; IsMouseInEditor()
 WheelUp::SendEvent "{vkDD}"   ; 右へナッジ（]）
 WheelDown::SendEvent "{vkDB}" ; 左へナッジ（[）
 #HotIf
 
-IsMouseNearClickY() {
-    global SelectedNoteY
+; マウスが「同じウィンドウ」かつ「ピアノロールの上端〜下端の間」にあるか判定
+IsMouseInEditor() {
+    global SelectedWinID, EditorTopY, EditorBottomY
     CoordMode "Mouse", "Screen"
-    MouseGetPos(, &amp;my)
-    Margin := 150
-    return (Abs(my - SelectedNoteY) &lt;= Margin)
+    MouseGetPos(, &amp;my, &amp;currWinID)
+    return (currWinID == SelectedWinID &amp;&amp; my &gt;= EditorTopY &amp;&amp; my &lt;= EditorBottomY)
 }
-
 ; ==============================================================================
-; 超高速エリアスキャン関数（BitBltで画面を一括メモリ転送し、5秒→0.002秒に短縮）
+; 高速スキャン関数群（BitBltメモリ一括転送）
 ; ==============================================================================
-FastScanAreaForNote(x, y, w, h) {
+FastScanKeyboardArea(x, y, w, h) {
     hdcScreen := DllCall("GetDC", "Ptr", 0, "Ptr")
     hdcMem := DllCall("CreateCompatibleDC", "Ptr", hdcScreen, "Ptr")
     
     bi := Buffer(40, 0)
-    NumPut("UInt", 40, bi, 0)
-    NumPut("Int", w, bi, 4)
-    NumPut("Int", -h, bi, 8) ; トップダウンDIB
-    NumPut("UShort", 1, bi, 12)
-    NumPut("UShort", 32, bi, 14) ; 32bit BGRA
+    NumPut("UInt", 40, bi, 0), NumPut("Int", w, bi, 4), NumPut("Int", -h, bi, 8)
+    NumPut("UShort", 1, bi, 12), NumPut("UShort", 32, bi, 14)
     
     pBits := 0
     hbm := DllCall("CreateDIBSection", "Ptr", hdcMem, "Ptr", bi, "UInt", 0, "Ptr*", &amp;pBits, "Ptr", 0, "UInt", 0, "Ptr")
     obm := DllCall("SelectObject", "Ptr", hdcMem, "Ptr", hbm, "Ptr")
-    
-    ; 画面の指定領域をメモリへ一瞬で一括コピー（0x00CC0020 = SRCCOPY）
     DllCall("BitBlt", "Ptr", hdcMem, "Int", 0, "Int", 0, "Int", w, "Int", h, "Ptr", hdcScreen, "Int", x, "Int", y, "UInt", 0x00CC0020)
     
-    found := false
+    foundNote := false
+    hasWhiteKey := false
     totalPixels := w * h
     offset := 0
     Loop totalPixels {
         colorInt := NumGet(pBits, offset, "UInt") &amp; 0xFFFFFF
-        if (IsNoteColor(colorInt)) {
-            found := true
+        if (!foundNote &amp;&amp; IsNoteColor(colorInt)) {
+            foundNote := true
+        }
+        if (!hasWhiteKey) {
+            r := (colorInt &gt;&gt; 16) &amp; 0xFF
+            g := (colorInt &gt;&gt; 8) &amp; 0xFF
+            b := colorInt &amp; 0xFF
+            if ((r + g + b) / 3 &gt;= 135) {
+                hasWhiteKey := true
+            }
+        }
+        if (foundNote &amp;&amp; hasWhiteKey) {
             break
         }
         offset += 4
@@ -272,8 +281,75 @@ FastScanAreaForNote(x, y, w, h) {
     DllCall("DeleteObject", "Ptr", hbm)
     DllCall("DeleteDC", "Ptr", hdcMem)
     DllCall("ReleaseDC", "Ptr", 0, "Ptr", hdcScreen)
+    return {foundNote: foundNote, hasWhiteKey: hasWhiteKey}
+}
+
+FastScanSinglePoint(x, y, w, h) {
+    res := FastScanKeyboardArea(x, y, w, h)
+    return res.foundNote
+}
+
+; クリック位置から上下両方向へスキャンし、ピアノロールの上端・下端Y座標を特定
+FindPianoRollBoundsY(x, startY) {
+    screenH := SysGet(79)
+    if (screenH &lt;= 0)
+        screenH := A_ScreenHeight
     
-    return found
+    hdcScreen := DllCall("GetDC", "Ptr", 0, "Ptr")
+    hdcMem := DllCall("CreateCompatibleDC", "Ptr", hdcScreen, "Ptr")
+    
+    bi := Buffer(40, 0)
+    NumPut("UInt", 40, bi, 0), NumPut("Int", 1, bi, 4), NumPut("Int", -screenH, bi, 8)
+    NumPut("UShort", 1, bi, 12), NumPut("UShort", 32, bi, 14)
+    
+    pBits := 0
+    hbm := DllCall("CreateDIBSection", "Ptr", hdcMem, "Ptr", bi, "UInt", 0, "Ptr*", &amp;pBits, "Ptr", 0, "UInt", 0, "Ptr")
+    obm := DllCall("SelectObject", "Ptr", hdcMem, "Ptr", hbm, "Ptr")
+    DllCall("BitBlt", "Ptr", hdcMem, "Int", 0, "Int", 0, "Int", 1, "Int", screenH, "Ptr", hdcScreen, "Int", x, "Int", 0, "UInt", 0x00CC0020)
+    
+    ; 1. 上方向へスキャンして上端(topY)を特定
+    darkCount := 0
+    topY := 0
+    y := Min(startY, screenH - 1)
+    while (y &gt;= 0) {
+        colorInt := NumGet(pBits, y * 4, "UInt") &amp; 0xFFFFFF
+        r := (colorInt &gt;&gt; 16) &amp; 0xFF, g := (colorInt &gt;&gt; 8) &amp; 0xFF, b := colorInt &amp; 0xFF
+        if ((r + g + b) / 3 &lt; 135 &amp;&amp; !IsNoteColor(colorInt)) {
+            darkCount++
+            if (darkCount &gt;= 35) {
+                topY := y + 35
+                break
+            }
+        } else {
+            darkCount := 0
+        }
+        y--
+    }
+    
+    ; 2. 下方向へスキャンして下端(bottomY)を特定
+    darkCount := 0
+    bottomY := screenH
+    y := Max(0, startY)
+    while (y &lt; screenH) {
+        colorInt := NumGet(pBits, y * 4, "UInt") &amp; 0xFFFFFF
+        r := (colorInt &gt;&gt; 16) &amp; 0xFF, g := (colorInt &gt;&gt; 8) &amp; 0xFF, b := colorInt &amp; 0xFF
+        if ((r + g + b) / 3 &lt; 135 &amp;&amp; !IsNoteColor(colorInt)) {
+            darkCount++
+            if (darkCount &gt;= 35) {
+                bottomY := y - 35
+                break
+            }
+        } else {
+            darkCount := 0
+        }
+        y++
+    }
+    
+    DllCall("SelectObject", "Ptr", hdcMem, "Ptr", obm)
+    DllCall("DeleteObject", "Ptr", hbm)
+    DllCall("DeleteDC", "Ptr", hdcMem)
+    DllCall("ReleaseDC", "Ptr", 0, "Ptr", hdcScreen)
+    return {topY: topY, bottomY: bottomY}
 }
 
 ; ==============================================================================
@@ -306,7 +382,7 @@ IsNoteColor(colorInt) {
 <div class="card">
 <h2>5. Windows起動時の自動常駐（スタートアップ登録）と運用</h2>
 <ul>
-<li><strong>スタートアップ登録手順</strong>：保存した <code>.ahk</code> ファイルを右クリック ＞「ショートカットの作成」を実行。<code>Win + R</code> を押して <code>shell:startup</code> と入力して開き、作成したショートカットをそのフォルダへ移動します。</li>
+<li><strong>スタートアップ登録手順（UAC警告なし）</strong>：保存した <code>.ahk</code> ファイルを右クリック ＞「ショートカットの作成」を実行。<code>Win + R</code> を押して <code>shell:startup</code> と入力して開き、作成したショートカットをそのフォルダへ移動します（管理者昇格処理を省いているため、PC起動時に警告ダイアログなしで自動常駐します）。</li>
 <li><strong>状態ズレのリセット</strong>：起動時は「プリロール」と「メトロノーム」が消灯していることを確認してください。手動操作等で状態が反転した場合は、タスクトレイの緑の「H」アイコンを右クリック ＞「Reload Script」で即座にリセットできます。</li>
 </ul>
 <div class="note">※色コードの個別指定は不要です。画面レイアウトや解像度が変わった場合のみ、<code>\</code> キー（ひらがなの「ろ」／「ー」キー）で <code>KeyAreaMinX</code> と <code>KeyAreaMaxX</code> の2つの数字だけを調整してください。</div>

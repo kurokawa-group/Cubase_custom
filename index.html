@@ -3,89 +3,93 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cubase 16 AutoHotkey v2 自動化設定ガイド Index</title>
+<title>Cubase 16 自動化スクリプト ガイド一覧</title>
 <style>
-:root{--bg:#181a1f;--surface:#22262e;--border:#333945;--text:#f0f2f5;--muted:#b0b8c5;--accent:#4dabf7;--hover:#339af0;--code:#121417}
+:root{--bg:#181a1f;--surface:#22262e;--border:#333945;--text:#f0f2f5;--muted:#b0b8c5;--accent:#4dabf7;--hover:#339af0;--code:#121417;--badge:#2b3240}
 *{box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Noto Sans JP",sans-serif;background:var(--bg);color:var(--text);font-size:19px;line-height:1.7;margin:0;padding:40px 20px}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Noto Sans JP",sans-serif;background:var(--bg);color:var(--text);font-size:19px;line-height:1.7;margin:0;padding:30px 20px}
 .container{max-width:960px;margin:0 auto}
-h1{font-size:1.85rem;border-bottom:3px solid var(--accent);padding-bottom:14px;margin:0 0 16px;line-height:1.35}
-p.lead{color:var(--muted);margin:0 0 32px;font-size:1.05rem}
-.grid{display:grid;grid-template-columns:1fr;gap:22px;margin-bottom:36px}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:26px 30px;box-shadow:0 4px 16px rgba(0,0,0,.35);transition:border-color .2s,transform .2s;display:flex;flex-direction:column;justify-content:space-between}
-.card:hover{border-color:var(--accent);transform:translateY(-2px)}
-.badge{display:inline-block;background:var(--code);color:var(--accent);border:1px solid var(--border);font-size:.8rem;font-weight:bold;padding:3px 10px;border-radius:20px;margin-bottom:10px;width:fit-content}
-.badge.rec{background:var(--accent);color:#111;border:none}
-h2{font-size:1.35rem;margin:0 0 10px;color:var(--text);line-height:1.4}
-.desc{font-size:.98rem;color:var(--muted);margin:0 0 20px}
-.link-row{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid var(--border);padding-top:16px}
-.file-name{font-family:Consolas,Monaco,monospace;font-size:.9rem;color:#ffd43b;word-break:break-all}
-a.btn{background:var(--accent);color:#111;text-decoration:none;font-weight:bold;padding:10px 22px;border-radius:6px;font-size:.98rem;transition:background .2s;text-align:center;white-space:nowrap}
-a.btn:hover{background:var(--hover)}
-.info-box{background:var(--surface);border-left:4px solid var(--accent);padding:18px 24px;border-radius:8px;font-size:.95rem;color:var(--muted);word-break:break-word}
-code{font-family:Consolas,Monaco,monospace;background:var(--code);padding:2px 6px;border-radius:4px;color:#ffd43b}
+h1{font-size:1.85rem;border-bottom:3px solid var(--accent);padding-bottom:12px;margin:0 0 20px;line-height:1.35}
+h2{font-size:1.35rem;color:var(--accent);margin:0 0 14px;line-height:1.4}
+p{margin:0 0 16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px 28px;margin-bottom:28px;box-shadow:0 4px 16px rgba(0,0,0,.3)}
+ul,ol{margin:8px 0;padding-left:24px}
+li{margin-bottom:10px}
+code{font-family:Consolas,Monaco,monospace;background:var(--code);padding:3px 7px;border-radius:5px;font-size:.92em;color:#ffd43b}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+
+.guide-grid{display:grid;grid-template-columns:1fr;gap:18px;margin-top:16px}
+.guide-item{display:block;background:var(--code);border:1px solid var(--border);border-radius:8px;padding:20px 24px;text-decoration:none;color:var(--text);transition:all .15s}
+.guide-item:hover{border-color:var(--accent);background:rgba(77,171,247,.08);text-decoration:none;transform:translateY(-2px)}
+.guide-title{font-size:1.2rem;font-weight:bold;color:var(--accent);margin-bottom:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.badge{font-size:.78rem;background:var(--badge);color:#ffd43b;padding:3px 9px;border-radius:4px;border:1px solid var(--border)}
+.guide-desc{font-size:.98rem;color:var(--muted);margin:0}
+
+.btn-link{display:inline-block;background:var(--accent);color:#111;font-weight:bold;padding:10px 20px;border-radius:6px;text-decoration:none;font-size:.98rem;margin-top:8px}
+.btn-link:hover{background:var(--hover);text-decoration:none}
+.note{font-size:.95rem;color:var(--muted);border-left:4px solid var(--accent);padding-left:14px;margin-top:16px}
 
 @media (max-width: 640px) {
-  body{font-size:16px;padding:24px 14px}
-  h1{font-size:1.45rem}
-  p.lead{font-size:.95rem;margin-bottom:24px}
-  .card{padding:20px 18px}
+  body{font-size:16px;padding:20px 14px}
+  h1{font-size:1.45rem;margin-bottom:18px}
   h2{font-size:1.18rem}
-  .desc{font-size:.94rem}
-  .link-row{flex-direction:column;align-items:stretch}
-  .file-name{font-size:.85rem}
-  a.btn{width:100%;padding:12px 16px;font-size:1rem}
-  .info-box{padding:14px 16px;font-size:.9rem}
+  .card{padding:18px 16px;margin-bottom:20px}
+  ul,ol{padding-left:20px}
+  .guide-item{padding:16px}
+  .guide-title{font-size:1.08rem}
+  .guide-desc{font-size:.92rem}
+  .note{font-size:.9rem}
 }
 </style>
 </head>
 <body>
 <div class="container">
-  <h1>Cubase 16 × AutoHotkey v2 　設定ガイド一覧</h1>
-  <p class="lead">用途に合わせて3種類の設定マニュアル・スクリプトダウンロードページを用意しています。</p>
+<h1>Cubase 16 自動化スクリプト ガイド一覧</h1>
+<p>Windows環境で <strong>Cubase 16</strong> の操作性を大幅に向上させる、AutoHotkey v2 用の自動化スクリプトと設定ガイドです。用途に合わせて統合版または単体版をお選びください。</p>
 
-  <div class="grid">
-    <div class="card">
-      <div>
-        <span class="badge rec">★ おすすめ（全部入り）</span>
-        <h2>1. 自動プリロール録音 ＋ 自動ホイールナッジ【統合版】</h2>
-        <p class="desc">2小節前からの自動プリロール録音と、MIDIノート選択中だけの自動ホイールナッジ（1msなど任意の単位で調整可能）を1本のスクリプトにまとめた完全版です。</p>
-      </div>
-      <div class="link-row">
-        <span class="file-name">combine.html</span>
-        <a href="combine.html" class="btn">解説書を開く →</a>
-      </div>
-    </div>
+<div class="card">
+<h2>1. スクリプト＆設定ガイド一覧</h2>
+<div class="guide-grid">
+  <a href="combine.html" class="guide-item">
+    <div class="guide-title">統合版：自動プリロール録音 ＋ 自動ホイールナッジ <span class="badge">おすすめ・全部入り</span></div>
+    <p class="guide-desc">2小節前からのプリロール自動録音と、MIDIノート選択直後だけのホイールナッジを1つのスクリプトで同時に実現します。</p>
+  </a>
 
-    <div class="card">
-      <div>
-        <span class="badge">単体機能①</span>
-        <h2>2. 自動プリロール録音 設定ガイド【単体版】</h2>
-        <p class="desc">テンキー <code>*</code> での2小節前プリロール＋クリック付き自動録音と、<code>Space</code> / テンキー <code>0</code> 停止時の自動解除（通常再生時は完全無音）のみを使いたい方向けです。</p>
-      </div>
-      <div class="link-row">
-        <span class="file-name">preroll.html</span>
-        <a href="preroll.html" class="btn">解説書を開く →</a>
-      </div>
-    </div>
+  <a href="nudge.html" class="guide-item">
+    <div class="guide-title">単体版：自動ホイールナッジのみ <span class="badge">nudge.ahk</span></div>
+    <p class="guide-desc">MIDIノートをクリックした直後だけマウスホイールが左右ナッジになり、他所クリックや領域外への移動で即座に通常スクロールへ戻ります。</p>
+  </a>
 
-    <div class="card">
-      <div>
-        <span class="badge">単体機能②</span>
-        <h2>3. 自動ホイールナッジ 設定ガイド【単体版】</h2>
-        <p class="desc">MIDIノート選択中だけマウスホイールを左右ナッジ（1msなど任意の単位で調整可能）に切り替え、選択解除時は即座に通常スクロールへ戻る機能のみを使いたい方向けです。</p>
-      </div>
-      <div class="link-row">
-        <span class="file-name">nudge.html</span>
-        <a href="nudge.html" class="btn">解説書を開く →</a>
-      </div>
-    </div>
-  </div>
+  <a href="preroll.html" class="guide-item">
+    <div class="guide-title">単体版：自動プリロール録音のみ <span class="badge">preroll.ahk</span></div>
+    <p class="guide-desc">テンキー <code>*</code> で「プリロール＋クリック」を自動ONにして録音を開始し、停止（<code>Space</code> / <code>0</code>）と同時に両方とも自動OFFに戻します。</p>
+  </a>
+</div>
+</div>
 
-  <div class="info-box">
-    <strong>📁 ファイル配置のヒント：</strong><br>
-    この <code>index.html</code> と同じフォルダに、各解説書を <code>combine.html</code> / <code>preroll.html</code> / <code>nudge.html</code> という名前で保存すると、上のボタンから直接ページ移動できます。
-  </div>
+<div class="card">
+<h2>2. AutoHotkey（オートホットキー）とは？</h2>
+<ul>
+<li><strong>どんなソフト？</strong>：<br>Windowsのキーボード操作・マウス操作・画面判定などを自動化・カスタマイズできる、無料のオープンソース常駐ユーティリティです。</li>
+<li><strong>Cubaseでのメリット</strong>：<br><code>#HotIf</code> という条件指定機能により、<strong>「Cubaseの画面がアクティブなときだけ動作する」</strong>ように制限できるため、ブラウザや他のソフトの操作を一切邪魔しません。</li>
+<li><strong>軽量・安全</strong>：<br>常駐時のメモリ消費はごくわずか（数MB程度）で、不要なときは画面右下のタスクトレイにある緑の「H」アイコンからいつでも一時停止・終了できます。</li>
+</ul>
+</div>
+
+<div class="card">
+<h2>3. AutoHotkey v2 の入手とインストール手順</h2>
+<p>本ガイドのスクリプトはすべて最新の <strong>AutoHotkey v2.0（v2系）</strong> で動作します（古い v1.1 では動かないため必ず v2 をインストールしてください）。</p>
+<ol>
+<li><strong>公式サイトへアクセス</strong>：<br>下のボタン（または検索で「AutoHotkey 公式」）から公式サイトを開きます。<br>
+<a href="https://autohotkey.com" target="_blank" rel="noopener noreferrer" class="btn-link">AutoHotkey 公式サイトを開く ↗</a></li>
+<li><strong>インストーラーのダウンロード</strong>：<br>トップページの <strong>「Download」</strong> ボタンをクリックし、<strong>「Download v2.0」</strong>（現在の最新安定版）を選択して <code>AutoHotkey_2.0.xx_setup.exe</code> を保存します。</li>
+<li><strong>インストール実行</strong>：<br>ダウンロードした <code>.exe</code> ファイルをダブルクリックし、画面の <strong>「Install」</strong> を押すだけで数秒で完了します（設定はすべて初期状態のままで問題ありません）。</li>
+<li><strong>スクリプトの起動</strong>：<br>インストール完了後は、各ガイドページからダウンロードした <code>.ahk</code> ファイルをダブルクリックするだけで自動的に常駐が始まります。</li>
+</ol>
+<div class="note">※インストール時に「v1とv2のどちらを使いますか？」と聞かれた場合は、<strong>v2</strong> を選択してください。</div>
+</div>
+
 </div>
 </body>
 </html>
