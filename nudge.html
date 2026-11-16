@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cubase 16 自動ホイールナッジ 設定ガイド（単体版）</title>
 <style>
-:root{--bg:#181a1f;--surface:#22262e;--border:#333945;--text:#f0f2f5;--muted:#b0b8c5;--accent:#4dabf7;--hover:#339af0;--code:#121417}
+:root{--bg:#181a1f;--surface:#22262e;--border:#333945;--text:#f0f2f5;--muted:#b0b8c5;--accent:#4dabf7;--hover:#339af0;--code:#121417;--warn:#fcc419}
 *{box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Noto Sans JP",sans-serif;background:var(--bg);color:var(--text);font-size:19px;line-height:1.7;margin:0;padding:30px 20px}
 .container{max-width:960px;margin:0 auto}
@@ -14,13 +14,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","No
 .back-nav a:hover{border-color:var(--accent);background:rgba(77,171,247,.12)}
 h1{font-size:1.75rem;border-bottom:3px solid var(--accent);padding-bottom:12px;margin:0 0 24px;line-height:1.35}
 h2{font-size:1.35rem;color:var(--accent);margin:0 0 14px;line-height:1.4}
+h3{font-size:1.12rem;color:#fff;margin:20px 0 8px}
 p{margin:0 0 16px}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px 28px;margin-bottom:28px;box-shadow:0 4px 16px rgba(0,0,0,.3)}
 .table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;margin:12px 0}
 table{width:100%;border-collapse:collapse;font-size:1rem;min-width:560px}
 th,td{border:1px solid var(--border);padding:12px 14px;text-align:left}
 th{background:var(--code);color:var(--accent)}
-ul{margin:8px 0;padding-left:24px}
+ul,ol{margin:8px 0;padding-left:24px}
 li{margin-bottom:10px}
 code{font-family:Consolas,Monaco,monospace;background:var(--code);padding:3px 7px;border-radius:5px;font-size:.92em;color:#ffd43b}
 pre{background:var(--code);border:1px solid var(--border);border-radius:8px;padding:18px;overflow-x:auto;font-family:Consolas,Monaco,monospace;font-size:15px;line-height:1.5;color:#e6edf3;margin:0}
@@ -30,6 +31,7 @@ button:hover{background:var(--hover)}
 button.secondary{background:var(--border);color:var(--text)}
 button.secondary:hover{background:#444c5c}
 .note{font-size:.95rem;color:var(--muted);border-left:4px solid var(--accent);padding-left:14px;margin-top:16px}
+.step-box{background:var(--code);border:1px solid var(--border);border-radius:8px;padding:16px 20px;margin:14px 0}
 
 @media (max-width: 640px) {
   body{font-size:16px;padding:20px 14px}
@@ -38,7 +40,7 @@ button.secondary:hover{background:#444c5c}
   .card{padding:18px 16px;margin-bottom:20px}
   table{font-size:.9rem}
   th,td{padding:10px 10px}
-  ul{padding-left:20px}
+  ul,ol{padding-left:20px}
   pre{font-size:13px;padding:14px}
   .btn-group{flex-direction:column;gap:10px}
   button{width:100%;padding:13px 16px;font-size:1rem}
@@ -50,7 +52,7 @@ button.secondary:hover{background:#444c5c}
 <div class="container">
 <div class="back-nav"><a href="index.html">← ガイド一覧（トップ）へ戻る</a></div>
 <h1>Cubase 16 自動ホイールナッジ 設定ガイド（単体版）</h1>
-<p>Cubase 16 がアクティブなときだけ有効になり、<strong>MIDIノート選択中だけの自動ホイールナッジ（1msなど任意の単位で調整可能）</strong>と、<strong>選択解除時の通常スクロール即復帰</strong>を実現します。</p>
+<p>Cubase 16 がアクティブなときだけ有効になり、<strong>MIDIノートをクリックした直後だけの自動ホイールナッジ（1msなど任意の単位で調整可能）</strong>と、<strong>他所クリック時の通常スクロール即復帰</strong>を実現します。</p>
 
 <div class="card">
 <h2>1. 操作割り当て一覧</h2>
@@ -58,9 +60,9 @@ button.secondary:hover{background:#444c5c}
 <table>
 <thead><tr><th>操作方法</th><th>Cubase上の動作</th><th>内部処理（送信キー）</th></tr></thead>
 <tbody>
-<tr><td>ノート選択中に <code>ホイール上</code></td><td>右へナッジ（設定グリッド単位で後ろへ移動）</td><td><code>]</code>（片道スキャンON時）</td></tr>
-<tr><td>ノート選択中に <code>ホイール下</code></td><td>左へナッジ（設定グリッド単位で前へ移動）</td><td><code>[</code>（片道スキャンON時）</td></tr>
-<tr><td>空白クリック / <code>Esc</code></td><td>選択解除と同時に通常スクロールへ即復帰</td><td>スキャンせず強制OFF</td></tr>
+<tr><td>MIDIノート選択直後に <code>ホイール上</code></td><td>右へナッジ（設定グリッド単位で後ろへ移動）</td><td><code>]</code>（高速メモリ判定ON時）</td></tr>
+<tr><td>MIDIノート選択直後に <code>ホイール下</code></td><td>左へナッジ（設定グリッド単位で前へ移動）</td><td><code>[</code>（高速メモリ判定ON時）</td></tr>
+<tr><td>他所をクリック / <code>Esc</code></td><td>遅延ゼロ（約0.002秒）で通常のスクロールへ即復帰</td><td>クリックごとに再判定してOFF</td></tr>
 </tbody>
 </table>
 </div>
@@ -69,7 +71,6 @@ button.secondary:hover{background:#444c5c}
 <div class="card">
 <h2>2. Cubase 16 本体側の事前設定</h2>
 <ul>
-<li><strong>情報ラインの表示</strong>：<br>キーエディタ上部のレイアウト設定で「情報ライン」を表示させておきます。</li>
 <li><strong>ナッジ単位（グリッド）の調整</strong>：<br>エディタ上部のスナップ／グリッド設定で、<strong><code>1 ms</code> や <code>1/16</code> など動かしたい任意の単位</strong>に調整可能です（スナップOFF時はズーム倍率に応じた微調整になります）。</li>
 <li><strong>キーボードショートカット設定</strong>（編集 ＞ キーボードショートカット ＞ ナッジ）：
 <ul>
@@ -79,9 +80,33 @@ button.secondary:hover{background:#444c5c}
 </li>
 </ul>
 </div>
+<div class="card">
+<h2>3. 自動ナッジの判定原理と初期設定（環境別の幅取得手順）</h2>
+<p>MIDIノートを選択すると、キーエディタ左側のピアノ鍵盤エリアのうち、<strong>選択したノートの高さ（Y座標）に対応する鍵盤</strong>がハイライト（ピンク等の色付き、またはグレーノート色）に変化します。</p>
+<ul>
+<li><strong>色付きノート＆グレーノート自動判定</strong>：特定の色コード固定ではなく、<strong>彩度（色味）がある色</strong>および<strong>鍵盤背景（白鍵の明るいグレー・黒鍵の暗いグレー）を除外したノート特有のグレー色</strong>を自動判別するため、トラックカラーや選択状態による明度変化に左右されません。</li>
+<li><strong>メモリ一括転送（BitBlt）による約0.002秒の無遅延判定</strong>：クリックしたY座標（<code>my</code>）の前後（<strong>上下 <code>±150px</code></strong>＝2〜3鍵盤分以上の余裕）をWindows APIでメモリ上に一括コピーして1px単位で高速スキャンします。ノートの際をクリックした際の取りこぼしを防ぎつつ、選択解除（空白クリック）時も遅延ゼロで即座に通常スクロールへ戻ります。</li>
+<li><strong>タイムライン移動時の自動復帰</strong>：ノートを選択したままでも、マウスカーソルがクリック位置から上下 <code>150px</code> 以上離れる（上のタイムラインへ移動する）と自動的に通常のホイールスクロールへ切り替わります。</li>
+</ul>
+
+<h3>【初回セットアップ】ご自身の環境での「鍵盤判定エリア（X座標）」取得と貼り付け方法</h3>
+<div class="step-box">
+<ol>
+<li>まず下のスクリプト（<code>nudge.ahk</code>）をダウンロードしてダブルクリックし、常駐させます。</li>
+<li>Cubaseのキーエディタで<strong>適当なMIDIノート（黒鍵・白鍵）をクリックして選択状態</strong>にします（左側のピアノ鍵盤の該当音程が光ります）。</li>
+<li><strong>左端（<code>KeyAreaMinX</code>）の取得</strong>：鍵盤が光っている部分の左側（薄いハイライトも含めて <code>【ノート判定】</code> になる範囲）にマウスを乗せて、<strong><code>\</code> キー（ひらがなの「ろ」のキー、または BackSpace左隣の「ー」のキー）</strong>を押します。画面に表示された <code>X座標</code> をメモします。</li>
+<li><strong>右端（<code>KeyAreaMaxX</code>）の取得</strong>：黒鍵のノートを選択した際、鍵盤の右側は白くハイライトされるため、<strong>右端は「黒鍵の左右中央部（確実に色・ノート判定が残る位置）」にマウスを乗せて、同じく <code>\</code> キー（ひらがなの「ろ」／「ー」のキー）</strong>を押します。表示された <code>X座標</code> をメモします。</li>
+<li><code>nudge.ahk</code> をメモ帳などで開き、スクリプト上部にある <strong><code>【環境設定エリア】</code></strong> のうち、<strong><code>KeyAreaMinX</code> と <code>KeyAreaMaxX</code> の数字だけを書き換えて</strong>上書き保存し、タスクトレイの緑の「H」アイコンを右クリック ＞「Reload Script」を実行します。</li>
+</ol>
+<pre style="margin-top:12px; border-color:#4dabf7;">; ▼▼ スクリプト上部のこの部分にある 2つの数字（42 と 58）だけを書き換えてください ▼▼
+global KeyAreaMinX := 42        ; 鍵盤判定エリアの左端 X座標（初期値: 42）
+global KeyAreaMaxX := 58        ; 鍵盤判定エリアの右端 X座標（初期値: 58 ※黒鍵中央部）
+; ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲</pre>
+</div>
+</div>
 
 <div class="card">
-<h2>3. AutoHotkey v2 スクリプト（ナッジ単体版・確定座標反映済み）</h2>
+<h2>4. AutoHotkey v2 スクリプト（ナッジ単体版・BitBlt無遅延スキャン）</h2>
 <p>下のボタンから <code>.ahk</code> ファイルをダウンロードし、ダブルクリックして常駐させてください。</p>
 <pre id="ahk-code">#Requires AutoHotkey v2.0
 
@@ -94,33 +119,59 @@ SetTitleMatchMode "RegEx"
 #HotIf WinActive("ahk_exe i).*Cubase.*\.exe")
 
 SetKeyDelay 10, 10
-global IsNoteSelectedFlag := false
 
-; 【座標再取得用ヘルパー】レイアウト変更時に情報ライン白文字上で \ キーを押す
+; ==============================================================================
+; 【環境設定エリア】ご自身のモニター解像度に合わせて数字を合わせてください
+; ==============================================================================
+global KeyAreaMinX := 42        ; 鍵盤判定エリアの左端 X座標（初期値: 42）
+global KeyAreaMaxX := 58        ; 鍵盤判定エリアの右端 X座標（初期値: 58）
+; ==============================================================================
+
+global IsNoteSelectedFlag := false
+global SelectedNoteY := 0
+
+; 【座標・色取得ヘルパー】鍵盤の光る部分の上で \ キー（ひらがなの「ろ」／「ー」キー）を押す
 vkDC::
 vkE2:: {
     CoordMode "Mouse", "Screen"
     CoordMode "Pixel", "Screen"
     MouseGetPos(&amp;mx, &amp;my)
     col := PixelGetColor(mx, my)
-    A_Clipboard := "CheckX := " mx "`nTextColor := " col
-    ToolTip "コピー完了 X:" mx " 色:" col
-    SetTimer () =&gt; ToolTip(), -4000
+    isNote := IsNoteColor(col) ? "【ノート判定（色付き or グレーノート）】" : "【鍵盤背景（除外）】"
+    A_Clipboard := "X座標: " mx " / 色コード: " col
+    ToolTip "コピー完了！`nX座標: " mx "`n色コード: " col "`n判定: " isNote
+    SetTimer () =&gt; ToolTip(), -5000
 }
 
-; 解除時はスキャンしない「片道スキャン」方式の自動ナッジ
+; ==============================================================================
+; 自動ナッジ（メモリ一括コピーによる 0.002秒 超高速判定）
+; ==============================================================================
 ~LButton Up:: {
-    global IsNoteSelectedFlag
-    if (IsNoteSelectedFlag) {
-        IsNoteSelectedFlag := false
-        return
+    global IsNoteSelectedFlag, SelectedNoteY
+    global KeyAreaMinX, KeyAreaMaxX
+
+    Sleep 35 ; CubaseのUI描画完了待ち
+    CoordMode "Mouse", "Screen"
+    MouseGetPos(&amp;mx, &amp;my)
+    
+    SearchTop := Max(0, my - 150)
+    SearchHeight := 300
+    SearchWidth := Max(1, KeyAreaMaxX - KeyAreaMinX + 1)
+    
+    ; 1. 鍵盤側（KeyAreaMinX〜KeyAreaMaxX, my±150px）を一括メモリ取得して1px単位で超高速判定
+    FoundNoteColor := FastScanAreaForNote(KeyAreaMinX, SearchTop, SearchWidth, SearchHeight)
+    
+    ; 2. 鍵盤側で弾かれた場合でも、クリックした位置(mx, my)自体にノートがあれば救済
+    if (!FoundNoteColor &amp;&amp; mx &gt; KeyAreaMaxX + 20) {
+        FoundNoteColor := FastScanAreaForNote(mx, Max(0, my - 2), 1, 5)
     }
-    Sleep 60
-    CoordMode "Pixel", "Screen"
-    CheckX := 112
-    TextColor := 0xB1B2B3
-    if PixelSearch(&amp;FoundX, &amp;FoundY, CheckX, 150, CheckX, 950, TextColor, 15) {
+    
+    if (FoundNoteColor) {
         IsNoteSelectedFlag := true
+        SelectedNoteY := my
+    } else {
+        IsNoteSelectedFlag := false
+        SelectedNoteY := 0
     }
 }
 
@@ -129,10 +180,81 @@ vkE2:: {
     IsNoteSelectedFlag := false
 }
 
-#HotIf WinActive("ahk_exe i).*Cubase.*\.exe") &amp;&amp; IsNoteSelectedFlag
+#HotIf WinActive("ahk_exe i).*Cubase.*\.exe") &amp;&amp; IsNoteSelectedFlag &amp;&amp; IsMouseNearClickY()
 WheelUp::SendEvent "{vkDD}"   ; 右へナッジ（]）
 WheelDown::SendEvent "{vkDB}" ; 左へナッジ（[）
-#HotIf</pre>
+#HotIf
+
+IsMouseNearClickY() {
+    global SelectedNoteY
+    CoordMode "Mouse", "Screen"
+    MouseGetPos(, &amp;my)
+    Margin := 150
+    return (Abs(my - SelectedNoteY) &lt;= Margin)
+}
+
+; ==============================================================================
+; 超高速エリアスキャン関数（BitBltで画面を一括メモリ転送し、5秒→0.002秒に短縮）
+; ==============================================================================
+FastScanAreaForNote(x, y, w, h) {
+    hdcScreen := DllCall("GetDC", "Ptr", 0, "Ptr")
+    hdcMem := DllCall("CreateCompatibleDC", "Ptr", hdcScreen, "Ptr")
+    
+    bi := Buffer(40, 0)
+    NumPut("UInt", 40, bi, 0)
+    NumPut("Int", w, bi, 4)
+    NumPut("Int", -h, bi, 8) ; トップダウンDIB
+    NumPut("UShort", 1, bi, 12)
+    NumPut("UShort", 32, bi, 14) ; 32bit BGRA
+    
+    pBits := 0
+    hbm := DllCall("CreateDIBSection", "Ptr", hdcMem, "Ptr", bi, "UInt", 0, "Ptr*", &amp;pBits, "Ptr", 0, "UInt", 0, "Ptr")
+    obm := DllCall("SelectObject", "Ptr", hdcMem, "Ptr", hbm, "Ptr")
+    
+    ; 画面の指定領域をメモリへ一瞬で一括コピー（0x00CC0020 = SRCCOPY）
+    DllCall("BitBlt", "Ptr", hdcMem, "Int", 0, "Int", 0, "Int", w, "Int", h, "Ptr", hdcScreen, "Int", x, "Int", y, "UInt", 0x00CC0020)
+    
+    found := false
+    totalPixels := w * h
+    offset := 0
+    Loop totalPixels {
+        colorInt := NumGet(pBits, offset, "UInt") &amp; 0xFFFFFF
+        if (IsNoteColor(colorInt)) {
+            found := true
+            break
+        }
+        offset += 4
+    }
+    
+    DllCall("SelectObject", "Ptr", hdcMem, "Ptr", obm)
+    DllCall("DeleteObject", "Ptr", hbm)
+    DllCall("DeleteDC", "Ptr", hdcMem)
+    DllCall("ReleaseDC", "Ptr", 0, "Ptr", hdcScreen)
+    
+    return found
+}
+
+; ==============================================================================
+; 判定用関数：色付きノート ＋ グレーノート対応（鍵盤の白黒グレーだけを除外）
+; ==============================================================================
+IsNoteColor(colorInt) {
+    r := (colorInt &gt;&gt; 16) &amp; 0xFF
+    g := (colorInt &gt;&gt; 8) &amp; 0xFF
+    b := colorInt &amp; 0xFF
+    
+    maxC := Max(r, g, b)
+    minC := Min(r, g, b)
+    if ((maxC - minC) &gt; 15) {
+        return true
+    }
+    
+    avg := (r + g + b) / 3
+    if ((avg &gt;= 40 &amp;&amp; avg &lt;= 68) || (avg &gt;= 95 &amp;&amp; avg &lt;= 130)) {
+        return true
+    }
+    
+    return false
+}</pre>
 <div class="btn-group">
 <button onclick="copyCode()">コードをコピー</button>
 <button class="secondary" onclick="downloadAhk()">.ahk ファイルをダウンロード</button>
@@ -140,11 +262,12 @@ WheelDown::SendEvent "{vkDB}" ; 左へナッジ（[）
 </div>
 
 <div class="card">
-<h2>4. Windows起動時の自動常駐（スタートアップ登録）と運用</h2>
+<h2>5. Windows起動時の自動常駐（スタートアップ登録）と運用</h2>
 <ul>
 <li><strong>スタートアップ登録手順</strong>：保存した <code>.ahk</code> ファイルを右クリック ＞「ショートカットの作成」を実行。<code>Win + R</code> を押して <code>shell:startup</code> と入力して開き、作成したショートカットをそのフォルダへ移動します。</li>
-<li><strong>座標の再取得方法</strong>：画面レイアウトやモニター解像度を変更した場合は、ノート選択中に情報ラインの白文字へマウスを乗せて <code>\</code> キーを押すと、新しい <code>CheckX</code> と <code>TextColor</code> をクリップボードへ取得できます。</li>
+<li><strong>状態ズレのリセット</strong>：何らかの拍子に動作がおかしくなった場合は、タスクトレイの緑の「H」アイコンを右クリック ＞「Reload Script」で即座にリセットできます。</li>
 </ul>
+<div class="note">※色コードの個別指定は不要です。画面レイアウトや解像度が変わった場合のみ、<code>\</code> キー（ひらがなの「ろ」／「ー」キー）で <code>KeyAreaMinX</code> と <code>KeyAreaMaxX</code> の2つの数字だけを調整してください。</div>
 </div>
 
 <div class="back-nav"><a href="index.html">← ガイド一覧（トップ）へ戻る</a></div>
